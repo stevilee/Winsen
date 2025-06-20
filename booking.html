@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Book Transport - Winsen Deliveries</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+    }
+
+    header {
+      background-color: #002b5c;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    button {
+      background-color: #002b5c;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      font-size: 1em;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 20px;
+      width: 100%;
+    }
+
+    button:hover {
+      background-color: #004080;
+    }
+
+    .success-popup {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-color: #4caf50;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      display: none;
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Book a Transport</h1>
+  </header>
+
+  <div class="container">
+    <h2>Booking Form</h2>
+    <form id="bookingForm">
+      <label for="name">Full Name:</label>
+      <input type="text" id="name" name="name" required />
+
+      <label for="phone">Phone Number:</label>
+      <input type="tel" id="phone" name="phone" required />
+
+      <label for="pickup">Pickup Location:</label>
+      <input type="text" id="pickup" name="pickup" required />
+
+      <label for="destination">Destination:</label>
+      <input type="text" id="destination" name="destination" required />
+
+      <label for="date">Preferred Date:</label>
+      <input type="date" id="date" name="date" required />
+
+      <label for="time">Preferred Time:</label>
+      <select id="time" name="time" required>
+        <option value="08:00 AM">08:00 AM</option>
+        <option value="10:00 AM">10:00 AM</option>
+        <option value="02:00 PM">02:00 PM</option>
+        <option value="04:00 PM">04:00 PM</option>
+      </select>
+
+      <label for="details">Package Details:</label>
+      <textarea id="details" name="details" rows="4" placeholder="e.g. number of items, weight, fragile items, etc."></textarea>
+
+      <button type="submit">Submit Booking</button>
+    </form>
+  </div>
+
+  <div id="popup" class="success-popup">✅ Booking sent to email. Opening WhatsApp...</div>
+
+  <script>
+    const form = document.getElementById("bookingForm");
+    const popup = document.getElementById("popup");
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const formData = new FormData(form);
+      const name = formData.get("name");
+      const phone = formData.get("phone");
+      const pickup = formData.get("pickup");
+      const destination = formData.get("destination");
+      const date = formData.get("date");
+      const time = formData.get("time");
+      const details = formData.get("details");
+
+      const now = new Date();
+      const bookingID = `BK-${now.getFullYear()}${now.getMonth()+1}${now.getDate()}-${now.getHours()}${now.getMinutes()}${now.getSeconds()}`;
+
+      const payload = new FormData();
+      payload.append("_subject", "New Transport Booking");
+      payload.append("name", name);
+      payload.append("phone", phone);
+      payload.append("pickup", pickup);
+      payload.append("destination", destination);
+      payload.append("date", date);
+      payload.append("time", time);
+      payload.append("details", details);
+
+      // Send to Formspree
+      fetch("https://formspree.io/f/xovwnjro", {
+        method: "POST",
+        body: payload,
+        headers: { 'Accept': 'application/json' }
+      });
+
+      // Also send to Google Sheets
+      fetch("https://script.google.com/macros/s/AKfycbxnGk-iM6KaKdm6CEiqDiqnIah5oSiRbO49RbFFajYtjZXebUxVok8IsGsf3N6SdACl-Q/exec", {
+        method: "POST",
+        body: JSON.stringify({
+          name, phone, pickup, destination, date, time, details
+        }),
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
+
+      popup.style.display = "block";
+      const message = `Hello, I've made a booking. My Booking ID is ${bookingID}. Find my receipt attached. On your email.`;
+      setTimeout(() => {
+        window.location.href = `https://wa.me/254718053684?text=${encodeURIComponent(message)}`;
+      }, 1500);
+      setTimeout(() => {
+        window.location.href = "index.html";
+      }, 4000);
+    });
+  </script>
+</body>
+</html>
